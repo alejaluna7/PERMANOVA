@@ -1,1 +1,45 @@
 # PERMANOVA
+library(vegan)
+dist_dml <- vegan::vegdist(x=as.matrix(dml[,5:10]), method="euclidean", binary=FALSE, diag=TRUE, upper=TRUE, na.rm=FALSE)
+library("stringr")
+library("dplyr")
+library("reshape2")
+library("ggplot2")
+library("RColorBrewer")
+library("vegan")
+library("RVAideMemoire")
+setwd("C:/Users/vical/Desktop/Analisis_diversidad_funcional")
+read.csv("riq_spp.csv", sep = ",")
+library(rstatix)
+read.csv("riq_spp.csv", sep = ",")
+read.csv("riqueza_spp.csv", sep = ",")
+riqueza <- read.csv("riqueza_spp.csv", header = T, sep = ",")
+row.names(riqueza) <- riqueza[,1]
+detach("package:vegan", unload = TRUE)
+library(vegan)
+EntidadesFuncionales <- read.csv("ef_spp.csv", header = T, sep = ",")
+Factores <- read.csv("Factores.csv", header = T, sep = ",")
+Factores$Locality<- as.factor(Factores$Locality)
+Factores$Habitat<- as.factor(Factores$Habitat)
+Factores$Season<- as.factor(Factores$Season)
+Permanova <- adonis2(EntidadesFuncionales ~ Locality:Habitat+Season, data = Factores, permutations = 999, method = "Euclidean", sqrt.dist = TRUE, add = FALSE, by = "terms", parallel = getOption("mc.cores"), na.action = na.fail, strata = NULL)
+matriz_ef <- vegdist(EntidadesFuncionales, method="euclidean", binary=FALSE, diag=FALSE, upper=FALSE, na.rm = FALSE)
+Permanova <- adonis2(EntidadesFuncionales ~ Locality:Habitat+Season, data = Factores, permutations = 999, method = "euclidean", sqrt.dist = TRUE, add = FALSE, by = "terms", parallel = getOption("mc.cores"), na.action = na.fail, strata = NULL)
+Permanova
+Permanova1 <- adonis2(EntidadesFuncionales ~ Locality+Habitat+Locality:Habitat+Season, data = Factores, permutations = 999, method = "euclidean", sqrt.dist = TRUE, add = FALSE, by = "terms", parallel = getOption("mc.cores"), na.action = na.fail, strata = NULL)
+Permanova1
+Permanova2 <- adonis2(EntidadesFuncionales ~ Locality+Habitat+Season, data = Factores, permutations = 999, method = "euclidean", sqrt.dist = TRUE, add = FALSE, by = "terms", parallel = getOption("mc.cores"), na.action = na.fail, strata = NULL)
+Permanova2
+permtst <- RVAideMemoire::pairwise.perm.manova(resp = matriz_ef, fact = Factores$Locality, test = "Pillai", nperm = 999, progress = TRUE, p.method = "none")
+install.packages("RVAideMemoire")
+library(pls)
+library(pspearman)
+library(RVAideMemoire)
+permtst <- RVAideMemoire::pairwise.perm.manova(resp = matriz_ef, fact = Factores$Locality, test = "Pillai", nperm = 999, progress = TRUE, p.method = "none")
+df <- reshape2::melt(permtst$p.value)
+permtst
+df
+colnames(df) <- c("Loc1", "Loc2", "pvalue")
+df <- df[-which(is.na(df$pvalue)), ]
+df$pvalue.adj <- p.adjust(p = df$pvalue, method = "bonferroni", n = length(df$pvalue))
+View(df)
